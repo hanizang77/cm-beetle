@@ -15,6 +15,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"strconv"
 	"sync"
@@ -206,7 +207,9 @@ func main() {
 	log.Info().Msg("successfully load data from the lkvstore (file).")
 
 	// Start the request cleanup scheduler (cleanup every 24 hours, remove requests older than 1 week)
-	common.StartRequestCleanupScheduler(24*time.Hour, common.DefaultRequestRetentionPeriod)
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
+	defer cleanupCancel()
+	common.StartRequestCleanupScheduler(cleanupCtx, 24*time.Hour, common.DefaultRequestRetentionPeriod)
 
 	defer func() {
 		// Save the current state of the key-value store to file

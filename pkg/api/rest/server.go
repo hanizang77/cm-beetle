@@ -96,6 +96,7 @@ func RunServer(port string) {
 		{"/beetle/api"},
 		{"/tumblebug/api"},
 		{"/.well-known/appspecific/com.chrome.devtools.json"},
+		{"/favicon.ico"},
 		// {"/mci", "option=status"},
 	}
 
@@ -428,9 +429,8 @@ func RunServer(port string) {
 		fmt.Println()
 	}
 
-	// A context for graceful shutdown (It is based on the signal package)selfEndpoint := os.Getenv("BEETLE_SELF_ENDPOINT")
-	// NOTE -
-	// Use os.Interrupt Ctrl+C or Ctrl+Break on Windows
+	// A context for graceful shutdown (It is based on the signal package)
+	// NOTE: The signal.NotifyContext will listen for the specified OS signals and cancel the context when any of those signals are received, allowing for graceful shutdown of the server.
 	// Use syscall.KILL for Kill(can't be caught or ignored) (POSIX)
 	// Use syscall.SIGTERM for Termination (ANSI)
 	// Use syscall.SIGINT for Terminal interrupt (ANSI)

@@ -75,7 +75,7 @@ func NewClient(cfg ApiConfig) *TumblebugClient {
 	if cfg.Timeout > 0 {
 		r.SetTimeout(cfg.Timeout)
 	} else {
-		r.SetTimeout(10 * time.Minute)
+		r.SetTimeout(30 * time.Minute)
 	}
 
 	// Set Transport

@@ -19,6 +19,7 @@ package common
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -192,7 +193,8 @@ func CleanupOldRequests(maxAge time.Duration) int {
 
 // StartRequestCleanupScheduler starts a background goroutine that periodically
 // cleans up old request records. It runs cleanup at the specified interval.
-func StartRequestCleanupScheduler(interval time.Duration, maxAge time.Duration) {
+// The goroutine terminates when the provided context is cancelled.
+func StartRequestCleanupScheduler(ctx context.Context, interval time.Duration, maxAge time.Duration) {
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
@@ -205,8 +207,14 @@ func StartRequestCleanupScheduler(interval time.Duration, maxAge time.Duration) 
 		// Run initial cleanup
 		CleanupOldRequests(maxAge)
 
-		for range ticker.C {
-			CleanupOldRequests(maxAge)
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info().Msg("Request cleanup scheduler stopped")
+				return
+			case <-ticker.C:
+				CleanupOldRequests(maxAge)
+			}
 		}
 	}()
 }

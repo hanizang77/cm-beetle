@@ -15,7 +15,6 @@ limitations under the License.
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -103,8 +102,7 @@ func RecommendVMInfraWithDefaults(c echo.Context) error {
 	ok, err := recommendation.IsValidCspAndRegion(csp, region)
 	if !ok {
 		log.Error().Err(err).Msg("failed to validate CSP and region")
-		res := common.SimpleMsg{Message: err.Error()}
-		return c.JSON(http.StatusBadRequest, res)
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Invalid provider or region"})
 	}
 
 	// [Process]
@@ -114,8 +112,7 @@ func RecommendVMInfraWithDefaults(c echo.Context) error {
 	// [Ouput]
 	if err != nil {
 		log.Error().Err(err).Msg("failed to recommend an appropriate multi-cloud infrastructure (MCI) for cloud migration")
-		res := common.SimpleMsg{Message: err.Error()}
-		return c.JSON(http.StatusNotFound, res)
+		return c.JSON(http.StatusNotFound, common.SimpleMsg{Message: "Recommendation failed"})
 	}
 
 	return c.JSON(http.StatusOK, recommendedInfraInfoList)
@@ -159,22 +156,17 @@ func RecommendVMInfra(c echo.Context) error {
 	reqt := &RecommendVmInfraRequest{}
 	if err := c.Bind(reqt); err != nil {
 		log.Warn().Err(err).Msg("failed to bind a request body")
-		res := common.SimpleMsg{Message: err.Error()}
-		return c.JSON(http.StatusBadRequest, res)
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Invalid request format"})
 	}
 	log.Trace().Msgf("reqt: %v\n", reqt)
 
 	if reqt.DesiredCspAndRegionPair.Csp == "" && desiredCsp == "" {
-		err := fmt.Errorf("invalid request: 'desiredCsp' is required")
-		log.Warn().Err(err).Msg("invalid request: 'desiredCsp' is required")
-		resp := common.SimpleMsg{Message: err.Error()}
-		return c.JSON(http.StatusBadRequest, resp)
+		log.Warn().Msg("desiredCsp is required")
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Provider required"})
 	}
 	if reqt.DesiredCspAndRegionPair.Region == "" && desiredRegion == "" {
-		err := fmt.Errorf("invalid request: 'desiredRegion' is required")
-		log.Warn().Err(err).Msg("invalid request: 'desiredRegion' is required")
-		resp := common.SimpleMsg{Message: err.Error()}
-		return c.JSON(http.StatusBadRequest, resp)
+		log.Warn().Msg("desiredRegion is required")
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Region required"})
 	}
 
 	csp := reqt.DesiredCspAndRegionPair.Csp
@@ -190,16 +182,14 @@ func RecommendVMInfra(c echo.Context) error {
 	ok, err := recommendation.IsValidCspAndRegion(csp, region)
 	if !ok {
 		log.Error().Err(err).Msg("failed to validate CSP and region")
-		res := common.SimpleMsg{Message: err.Error()}
-		return c.JSON(http.StatusBadRequest, res)
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Invalid provider or region"})
 	}
 
 	// [Process]
 	recommendedInfra, err := recommendation.RecommendVmInfra(csp, region, sourceInfra)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to recommend an appropriate multi-cloud infrastructure (MCI) for cloud migration")
-		res := common.SimpleMsg{Message: err.Error()}
-		return c.JSON(http.StatusNotFound, res)
+		return c.JSON(http.StatusNotFound, common.SimpleMsg{Message: "Recommendation failed"})
 	}
 
 	// [Ouput]
@@ -270,19 +260,17 @@ func RecommendVmInfraCandidates(c echo.Context) error {
 	reqt := &RecommendVmInfraRequest{}
 	if err := c.Bind(reqt); err != nil {
 		log.Warn().Err(err).Msg("failed to bind a request body")
-		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse(err.Error()))
+		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Invalid request format"))
 	}
 	log.Trace().Msgf("reqt: %v\n", reqt)
 
 	if reqt.DesiredCspAndRegionPair.Csp == "" && desiredCsp == "" {
-		err := fmt.Errorf("invalid request: 'desiredCsp' is required")
-		log.Warn().Err(err).Msg("invalid request: 'desiredCsp' is required")
-		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("'desiredCsp' is required"))
+		log.Warn().Msg("desiredCsp is required")
+		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Provider required"))
 	}
 	if reqt.DesiredCspAndRegionPair.Region == "" && desiredRegion == "" {
-		err := fmt.Errorf("invalid request: 'desiredRegion' is required")
-		log.Warn().Err(err).Msg("invalid request: 'desiredRegion' is required")
-		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("'desiredRegion' is required"))
+		log.Warn().Msg("desiredRegion is required")
+		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Region required"))
 	}
 
 	csp := reqt.DesiredCspAndRegionPair.Csp
@@ -298,14 +286,14 @@ func RecommendVmInfraCandidates(c echo.Context) error {
 	ok, err := recommendation.IsValidCspAndRegion(csp, region)
 	if !ok {
 		log.Error().Err(err).Msg("failed to validate CSP and region")
-		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse(err.Error()))
+		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Invalid provider or region"))
 	}
 
 	// [Process]
 	recommendedInfraCandidates, err := recommendation.RecommendVmInfraCandidates(csp, region, sourceInfra, limit, minMatchRate)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to recommend multiple candidates of appropriate multi-cloud infrastructure (MCI) for cloud migration")
-		return c.JSON(http.StatusInternalServerError, model.SimpleErrorResponse(err.Error()))
+		return c.JSON(http.StatusInternalServerError, model.SimpleErrorResponse("Recommendation failed"))
 	}
 
 	// [Ouput]
@@ -349,17 +337,17 @@ func RecommendK8sControlPlane(c echo.Context) error {
 	reqt := &recommendation.KubernetesInfoList{}
 	if err := c.Bind(reqt); err != nil {
 		log.Error().Err(err).Msg("failed to bind request body")
-		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: err.Error()})
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Invalid request format"})
 	}
 
 	if len(reqt.Servers) == 0 {
-		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "at least one server information is required"})
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "At least one server required"})
 	}
 
 	ok, err := recommendation.IsValidCspAndRegion(desiredProvider, desiredRegion)
 	if !ok {
 		log.Error().Err(err).Msg("invalid provider or region")
-		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: err.Error()})
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Invalid provider or region"})
 	}
 
 	k8sInfoList := recommendation.KubernetesInfoList{
@@ -369,7 +357,7 @@ func RecommendK8sControlPlane(c echo.Context) error {
 	result, err := recommendation.RecommendK8sControlPlane(desiredProvider, desiredRegion, k8sInfoList)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to recommend K8s control plane")
-		return c.JSON(http.StatusInternalServerError, common.SimpleMsg{Message: err.Error()})
+		return c.JSON(http.StatusInternalServerError, common.SimpleMsg{Message: "K8s control plane recommendation failed"})
 	}
 
 	return c.JSON(http.StatusOK, result)
@@ -402,17 +390,17 @@ func RecommendK8sNodeGroup(c echo.Context) error {
 	reqt := &recommendation.KubernetesInfoList{}
 	if err := c.Bind(reqt); err != nil {
 		log.Error().Err(err).Msg("failed to bind request body")
-		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: err.Error()})
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Invalid request format"})
 	}
 
 	if len(reqt.Servers) == 0 {
-		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "at least one server information is required"})
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "At least one server required"})
 	}
 
 	ok, err := recommendation.IsValidCspAndRegion(desiredProvider, desiredRegion)
 	if !ok {
 		log.Error().Err(err).Msg("invalid provider or region")
-		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: err.Error()})
+		return c.JSON(http.StatusBadRequest, common.SimpleMsg{Message: "Invalid provider or region"})
 	}
 
 	k8sInfoList := recommendation.KubernetesInfoList{
@@ -422,7 +410,7 @@ func RecommendK8sNodeGroup(c echo.Context) error {
 	result, err := recommendation.RecommendK8sNodeGroup(desiredProvider, desiredRegion, k8sInfoList)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to recommend K8s node group")
-		return c.JSON(http.StatusInternalServerError, common.SimpleMsg{Message: err.Error()})
+		return c.JSON(http.StatusInternalServerError, common.SimpleMsg{Message: "K8s node group recommendation failed"})
 	}
 
 	return c.JSON(http.StatusOK, result)
