@@ -151,7 +151,7 @@ func MigrateData(c echo.Context) error {
 	err := transx.Validate(*req)
 	if err != nil {
 		log.Error().Err(err).Msg("invalid request")
-		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse(err.Error()))
+		return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Invalid migration parameters"))
 	}
 
 	// Security check: Prevent access to local filesystem
@@ -359,7 +359,7 @@ func TestDecryptData(c echo.Context) error {
 		case transx.ErrKeyMismatch:
 			return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Encryption key ID mismatch"))
 		default:
-			return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Decryption failed: "+err.Error()))
+			return c.JSON(http.StatusBadRequest, model.SimpleErrorResponse("Decryption failed"))
 		}
 	}
 

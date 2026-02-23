@@ -205,7 +205,7 @@ func (e *RsyncExecutor) executeAgentForward(source, destination DataLocation) er
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Implement host key verification when system-level key management is available
 	}
 
 	// Connect to source server

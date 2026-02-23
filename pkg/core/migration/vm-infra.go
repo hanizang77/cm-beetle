@@ -286,6 +286,11 @@ func CreateVMInfra(nsId string, targetInfraModel *cloudmodel.RecommendedVmInfra)
 	mciInfo, err := tbclient.NewSession().CreateMci(nsId, tbMciReq)
 	if err != nil {
 		log.Error().Err(err).Msgf("failed to create the multi-cloud infrastructure (nsId: %s)", nsId)
+
+		// TODO: Consider implementing resource rollback in case of failure at this step (e.g., delete created vNet, SSH key, security groups)
+		// ! But first, be cautious about the rollback since it may cause unintended consequences if not implemented properly (e.g., deleting resources that are shared with other infrastructures or used by other applications)
+		// ? Second, consider the trade-off between keeping the failed infrastructure for troubleshooting and rolling back the created resources, which is more beneficial for users in case of failure at this step
+
 		return emptyRet, err
 	}
 	log.Debug().Msgf("multi-cloud infrastructure created: %s", mciInfo.Id)

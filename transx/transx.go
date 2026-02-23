@@ -213,7 +213,7 @@ func executeSSHCommand(command string, cfg *SSHConfig) ([]byte, error) {
 	sshConfig := &ssh.ClientConfig{
 		User:            cfg.Username,
 		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Consider proper host key verification
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Implement host key verification when system-level key management is available
 		Timeout:         timeout,
 	}
 
